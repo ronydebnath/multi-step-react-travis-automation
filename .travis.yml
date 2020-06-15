@@ -1,0 +1,22 @@
+language: generic
+services:
+    - docker
+
+before_install:
+    - docker build -f ronydebnath/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run ronydebnath/react-test npm run test -- --watchAll=false
+
+after_success:
+    - docker build -t ronydebnath/multi-client ./client
+    - docker build -t ronydebnath/multi-nginx ./nginx
+    - docker build -t ronydebnath/multi-server ./server
+    - docker build -t ronydebnath/multi-worker ./worker
+    # login to docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    # take the images and push to docker hub
+    - docker push ronydebnath/multi-client
+    - docker push ronydebnath/multi-nginx
+    - docker push ronydebnath/multi-server
+    - docker push ronydebnath/multi-worker
